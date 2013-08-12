@@ -1,0 +1,15 @@
+/build
+/.gradle
+/.idea
+/target
+/out
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.cache
+.settings/
+.externalToolBuilders
+
+
