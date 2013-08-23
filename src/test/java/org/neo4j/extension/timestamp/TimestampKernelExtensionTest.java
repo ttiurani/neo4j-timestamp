@@ -14,7 +14,7 @@ public class TimestampKernelExtensionTest extends TimestampTestBase {
   @Test
   public void shouldCreateAndUpdateTimestamp() {    
     List<KernelExtensionFactory<?>> extensions = new ArrayList<KernelExtensionFactory<?>>(1); 
-    extensions.add(new TimestampKernelExtensionFactory());
+    extensions.add(new TimestampKernelExtensionFactory(true));
     GraphDatabaseService graphdb = new GraphDatabaseFactory()
         .addKernelExtensions(extensions)
         .newEmbeddedDatabaseBuilder(TEST_DATA_STORE_DESTINATION)

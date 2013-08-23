@@ -9,9 +9,11 @@ import org.neo4j.kernel.lifecycle.LifecycleAdapter;
 public class TimestampKernelExtension extends LifecycleAdapter{
   
   private final GraphDatabaseService gdb;
+  private boolean setupAutoIndexing = false;
 
-  public TimestampKernelExtension(GraphDatabaseService gdb){
+  public TimestampKernelExtension(GraphDatabaseService gdb, boolean setupAutoIndexing){
     this.gdb = gdb;
+    this.setupAutoIndexing = setupAutoIndexing;
   }
 
   @Override
