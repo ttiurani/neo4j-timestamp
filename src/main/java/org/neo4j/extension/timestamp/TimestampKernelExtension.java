@@ -19,8 +19,10 @@ public class TimestampKernelExtension extends LifecycleAdapter{
   @Override
   public void start() throws Throwable{
     IndexManager indexManager = this.gdb.index();
-    setupTimestampIndexing(indexManager.getNodeAutoIndexer());
-    setupTimestampIndexing(indexManager.getRelationshipAutoIndexer());
+    if(setupAutoIndexing){
+      setupTimestampIndexing(indexManager.getNodeAutoIndexer());
+      setupTimestampIndexing(indexManager.getRelationshipAutoIndexer());
+    }
     this.gdb.registerTransactionEventHandler(new TimestampTransactionEventHandler<String>());
   }
 
