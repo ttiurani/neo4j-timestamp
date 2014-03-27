@@ -2,24 +2,32 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
-  </parent>
-
   <groupId>org.extendedmind</groupId>
   <artifactId>neo4j-timestamp</artifactId>
   <packaging>jar</packaging>
   <name>Neo4j Timestamp</name>
-  <version>1.0-SNAPSHOT</version>
+  <version>2.0.1</version>
   <description>Neo4j Timestamp</description>
-  <url>https://github.com/ttiurani/neo4j-timestamp</url>
+  <url>https://github.com/extendedmind/neo4j-timestamp</url>
   <inceptionYear>2013</inceptionYear>
+  
+  <licenses>
+    <license>
+      <name>GNU Affero General Public License, Version 3</name>
+      <url>http://www.gnu.org/licenses/agpl-3.0.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:git@github.com:extendedmind/neo4j-timestamp.git</connection>
+    <developerConnection>scm:git:git@github.com:extendedmind/neo4j-timestamp.git</developerConnection>
+    <url>git@github.com:extendedmind/neo4j-timestamp.git</url>
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <neo4j.version>2.0.0</neo4j.version>
+    <neo4j.version>2.0.1</neo4j.version>
   </properties>
 
   <repositories>
@@ -107,4 +115,22 @@
       </plugin>
     </plugins>
   </build>
+
+  <distributionManagement>
+    <repository>
+      <uniqueVersion>false</uniqueVersion>
+      <id>extendedmind-releases</id>
+      <name>Extended Mind Releases</name>
+      <url>https://ci.ext.md/nexus/content/repositories/releases</url>
+      <layout>default</layout>
+    </repository>
+    <snapshotRepository>
+      <uniqueVersion>true</uniqueVersion>
+      <id>extendedmind-snapshots</id>
+      <name>Extended Mind Snapshots</name>
+      <url>https://ci.ext.md/nexus/content/repositories/snapshots</url>
+      <layout>default</layout>
+    </snapshotRepository>
+  </distributionManagement>
+
 </project>
