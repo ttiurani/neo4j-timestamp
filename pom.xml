@@ -6,7 +6,7 @@
   <artifactId>neo4j-timestamp</artifactId>
   <packaging>jar</packaging>
   <name>Neo4j Timestamp</name>
-  <version>2.0.1</version>
+  <version>2.0.2</version>
   <description>Neo4j Timestamp</description>
   <url>https://github.com/extendedmind/neo4j-timestamp</url>
   <inceptionYear>2013</inceptionYear>
@@ -27,7 +27,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <neo4j.version>2.0.1</neo4j.version>
+    <neo4j.version>${project.version}</neo4j.version>
   </properties>
 
   <repositories>
