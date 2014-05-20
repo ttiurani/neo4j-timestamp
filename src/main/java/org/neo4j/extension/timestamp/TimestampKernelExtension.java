@@ -10,10 +10,12 @@ public class TimestampKernelExtension extends LifecycleAdapter{
   
   private final GraphDatabaseService gdb;
   private boolean setupAutoIndexing = false;
+  private boolean addCreated = false;
 
-  public TimestampKernelExtension(GraphDatabaseService gdb, boolean setupAutoIndexing){
+  public TimestampKernelExtension(GraphDatabaseService gdb, boolean setupAutoIndexing, boolean addCreated){
     this.gdb = gdb;
     this.setupAutoIndexing = setupAutoIndexing;
+    this.addCreated = addCreated;
   }
 
   @Override
@@ -23,11 +25,14 @@ public class TimestampKernelExtension extends LifecycleAdapter{
       setupTimestampIndexing(indexManager.getNodeAutoIndexer());
       setupTimestampIndexing(indexManager.getRelationshipAutoIndexer());
     }
-    this.gdb.registerTransactionEventHandler(new TimestampTransactionEventHandler<String>());
+    this.gdb.registerTransactionEventHandler(new TimestampTransactionEventHandler<String>(this.addCreated));
   }
 
   void setupTimestampIndexing(AutoIndexer<? extends PropertyContainer> autoIndexer) {
-    autoIndexer.startAutoIndexingProperty(TimestampTransactionEventHandler.TIMESTAMP_PROPERTY_NAME);
+    autoIndexer.startAutoIndexingProperty(TimestampTransactionEventHandler.MODIFIED_TIMESTAMP_PROPERTY_NAME);
+    if (this.addCreated){
+      autoIndexer.startAutoIndexingProperty(TimestampTransactionEventHandler.CREATED_TIMESTAMP_PROPERTY_NAME);    	
+    }
     autoIndexer.setEnabled(true);
   }
 }

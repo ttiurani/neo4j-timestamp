@@ -1,7 +1,6 @@
 package org.neo4j.extension.timestamp;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.neo4j.graphdb.PropertyContainer;
@@ -20,8 +19,16 @@ import org.neo4j.graphdb.event.TransactionEventHandler;
 public class TimestampTransactionEventHandler<T> implements
     TransactionEventHandler<T> {
 
-  public static final String TIMESTAMP_PROPERTY_NAME = "modified";
+  public static final String MODIFIED_TIMESTAMP_PROPERTY_NAME = "modified";
+  public static final String CREATED_TIMESTAMP_PROPERTY_NAME = "created";
 
+  
+  private boolean addCreated = false;
+  
+  public TimestampTransactionEventHandler(boolean addCreated) {
+	this.addCreated = addCreated;
+  }
+  
   @Override
   public T beforeCommit(TransactionData data) throws Exception {
     long currentTime = System.currentTimeMillis();
@@ -34,6 +41,10 @@ public class TimestampTransactionEventHandler<T> implements
     
     updateTimestampsFor(data.createdNodes(), currentTime);
 
+    if (this.addCreated){
+      addCreatedTimestampFor(data.createdNodes(), currentTime);
+    }
+    
     // For created relationships, update both start and end node, and relationship itself
     Iterable<Relationship> createdRelationships = data.createdRelationships();
     Set<PropertyContainer> updatedPropertyContainers = null;
@@ -45,6 +56,11 @@ public class TimestampTransactionEventHandler<T> implements
     }
     updateTimestampsFor(updatedPropertyContainers, currentTime);
     updateTimestampsFor(createdRelationships, currentTime);
+    
+    if (this.addCreated){
+      addCreatedTimestampFor(createdRelationships, currentTime);
+    }
+    
     return null;
   }
 
@@ -97,7 +113,14 @@ public class TimestampTransactionEventHandler<T> implements
   private void updateTimestampsFor(Iterable<? extends PropertyContainer> propertyContainers, long currentTime) {
     if (propertyContainers == null) return;
     for (PropertyContainer propertyContainer : propertyContainers) {
-      propertyContainer.setProperty(TIMESTAMP_PROPERTY_NAME, currentTime);
+      propertyContainer.setProperty(MODIFIED_TIMESTAMP_PROPERTY_NAME, currentTime);
+    }
+  }
+  
+  private void addCreatedTimestampFor(Iterable<? extends PropertyContainer> propertyContainers, long currentTime) {
+    if (propertyContainers == null) return;
+    for (PropertyContainer propertyContainer : propertyContainers) {
+      propertyContainer.setProperty(CREATED_TIMESTAMP_PROPERTY_NAME, currentTime);
     }
   }
 }
