@@ -22,13 +22,13 @@ public class TimestampTransactionEventHandler<T> implements
   public static final String MODIFIED_TIMESTAMP_PROPERTY_NAME = "modified";
   public static final String CREATED_TIMESTAMP_PROPERTY_NAME = "created";
 
-  
+
   private boolean addCreated = false;
-  
+
   public TimestampTransactionEventHandler(boolean addCreated) {
 	this.addCreated = addCreated;
   }
-  
+
   @Override
   public T beforeCommit(TransactionData data) throws Exception {
     long currentTime = System.currentTimeMillis();
@@ -38,13 +38,13 @@ public class TimestampTransactionEventHandler<T> implements
     // With removed properties, don't update when node is being deleted
     updateRemoveTimestampsFor(data.removedRelationshipProperties(), data.deletedRelationships(), currentTime);
     updateRemoveTimestampsFor(data.removedNodeProperties(), data.deletedNodes(), currentTime);
-    
+
     updateTimestampsFor(data.createdNodes(), currentTime);
 
     if (this.addCreated){
       addCreatedTimestampFor(data.createdNodes(), currentTime);
     }
-    
+
     // For created relationships, update both start and end node, and relationship itself
     Iterable<Relationship> createdRelationships = data.createdRelationships();
     Set<PropertyContainer> updatedPropertyContainers = null;
@@ -56,11 +56,11 @@ public class TimestampTransactionEventHandler<T> implements
     }
     updateTimestampsFor(updatedPropertyContainers, currentTime);
     updateTimestampsFor(createdRelationships, currentTime);
-    
+
     if (this.addCreated){
       addCreatedTimestampFor(createdRelationships, currentTime);
     }
-    
+
     return null;
   }
 
@@ -92,16 +92,16 @@ public class TimestampTransactionEventHandler<T> implements
       if (deletedPropertyContainerSet == null || !deletedPropertyContainerSet.contains(propertyEntry.entity())){
         if (updatedPropertyContainers == null)
           updatedPropertyContainers = new HashSet<PropertyContainer>();
-        updatedPropertyContainers.add(propertyEntry.entity());        
+        updatedPropertyContainers.add(propertyEntry.entity());
       }
     }
     if (updatedPropertyContainers != null)
       updateTimestampsFor(updatedPropertyContainers, currentTime);
   }
-  
+
   private Set<?> propertyContainersToSet(Iterable<? extends PropertyContainer> propertyContainers){
     if (propertyContainers == null) return null;
-    Set<PropertyContainer> propertyContainerSet = null;    
+    Set<PropertyContainer> propertyContainerSet = null;
     for (PropertyContainer propertyContainer : propertyContainers){
       if (propertyContainerSet == null)
         propertyContainerSet = new HashSet<PropertyContainer>();
@@ -109,18 +109,20 @@ public class TimestampTransactionEventHandler<T> implements
     }
     return propertyContainerSet;
   }
-  
+
   private void updateTimestampsFor(Iterable<? extends PropertyContainer> propertyContainers, long currentTime) {
     if (propertyContainers == null) return;
     for (PropertyContainer propertyContainer : propertyContainers) {
       propertyContainer.setProperty(MODIFIED_TIMESTAMP_PROPERTY_NAME, currentTime);
     }
   }
-  
+
   private void addCreatedTimestampFor(Iterable<? extends PropertyContainer> propertyContainers, long currentTime) {
     if (propertyContainers == null) return;
     for (PropertyContainer propertyContainer : propertyContainers) {
-      propertyContainer.setProperty(CREATED_TIMESTAMP_PROPERTY_NAME, currentTime);
+      if (!propertyContainer.hasProperty(CREATED_TIMESTAMP_PROPERTY_NAME)){
+        propertyContainer.setProperty(CREATED_TIMESTAMP_PROPERTY_NAME, currentTime);
+      }
     }
   }
 }
