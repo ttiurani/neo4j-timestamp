@@ -1,10 +1,15 @@
 package org.neo4j.extension.timestamp;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.event.PropertyEntry;
 import org.neo4j.graphdb.event.TransactionData;
 import org.neo4j.graphdb.event.TransactionEventHandler;
@@ -24,9 +29,11 @@ public class TimestampTransactionEventHandler<T> implements
 
 
   private boolean addCreated = false;
-
-  public TimestampTransactionEventHandler(boolean addCreated) {
+  private List<TimestampCustomPropertyHandler> customPropertyHandlers = null;
+  
+  public TimestampTransactionEventHandler(boolean addCreated, List<TimestampCustomPropertyHandler> customPropertyHandlers) {
 	this.addCreated = addCreated;
+	this.customPropertyHandlers = customPropertyHandlers;
   }
 
   @Override
@@ -60,10 +67,36 @@ public class TimestampTransactionEventHandler<T> implements
     if (this.addCreated){
       addCreatedTimestampFor(createdRelationships, currentTime);
     }
+    
+    // Process custom relationships
+    if (customPropertyHandlers != null && !customPropertyHandlers.isEmpty()){
+    	for (TimestampCustomPropertyHandler cpr : customPropertyHandlers){
+    		for (PropertyEntry<Node> assignedProperty : data.assignedNodeProperties()){
+    			if (cpr.getCustomPropertyName() == assignedProperty.key()){
+    				// Assigned custom property found, process modifications
+    				updateCustomRelationshipModifiedTimestampsFor(
+    						assignedProperty.entity(),
+    						cpr.getModifiedRelationshipTypes(),
+    						cpr.getDirection(),
+    						currentTime);
+    			}
+    		}
+    		for (PropertyEntry<Node> removedProperty : data.removedNodeProperties()){
+    			if (cpr.getCustomPropertyName() == removedProperty.key()){
+    				// Removed custom property found, process modifications to relationships
+    				updateCustomRelationshipModifiedTimestampsFor(
+    						removedProperty.entity(),
+    						cpr.getModifiedRelationshipTypes(),
+    						cpr.getDirection(),
+    						currentTime);
+    			}    			
+    		}
+    	}
+    }
 
     return null;
   }
-
+  
   @Override
   public void afterCommit(TransactionData data, java.lang.Object state) {
   }
@@ -98,6 +131,39 @@ public class TimestampTransactionEventHandler<T> implements
     if (updatedPropertyContainers != null)
       updateTimestampsFor(updatedPropertyContainers, currentTime);
   }
+  
+  private void updateCustomRelationshipModifiedTimestampsFor(
+		  Node node,
+		  List<RelationshipType> customRelationshipTypes,
+		  Direction direction,
+		  long currentTime){
+	  List<Relationship> relationshipsToUpdate = null;
+	  for (RelationshipType customRelationshipType : customRelationshipTypes){
+		  for (Relationship relationship : node.getRelationships(direction)){
+			  if (relationship.isType(customRelationshipType)){
+				  // Found a relationship to update
+				  if (relationshipsToUpdate == null)
+					  relationshipsToUpdate = new ArrayList<Relationship>();
+				  relationshipsToUpdate.add(relationship);
+			  }
+		  }
+	  }
+	  if (relationshipsToUpdate != null){
+		  List<PropertyContainer> propertyContainersToUpdate =
+				  new ArrayList<PropertyContainer>(relationshipsToUpdate.size() * 2);
+		  for (Relationship relationshipToUpdate : relationshipsToUpdate){
+			  propertyContainersToUpdate.add(relationshipToUpdate);
+			  // Also update the node at the other end of the relatioship
+			  if (relationshipToUpdate.getEndNode().getId() != node.getId()){
+				  propertyContainersToUpdate.add(relationshipToUpdate.getEndNode());
+			  }else if (relationshipToUpdate.getStartNode().getId() != node.getId()){
+				  propertyContainersToUpdate.add(relationshipToUpdate.getStartNode());				  
+			  }
+		  }
+		  updateTimestampsFor(propertyContainersToUpdate, currentTime);
+	  }
+	  
+  }
 
   private Set<?> propertyContainersToSet(Iterable<? extends PropertyContainer> propertyContainers){
     if (propertyContainers == null) return null;
@@ -125,4 +191,5 @@ public class TimestampTransactionEventHandler<T> implements
       }
     }
   }
+ 
 }
